@@ -87,7 +87,6 @@ go_repository(
 
 go_repository(
     name = "com_github_googleapis_gax_go",
-    commit = "be11bb253a768098254dc71e95d1a81ced778de3",
     importpath = "github.com/googleapis/gax-go",
 )
 
