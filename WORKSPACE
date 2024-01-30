@@ -108,8 +108,8 @@ go_repository(
 go_repository(
     name = "com_google_cloud_go_pubsub",
     importpath = "cloud.google.com/go/pubsub",
-    sum = "h1:ukjixP1wl0LpnZ6LWtZJ0mX5tBmjp1f8Sqer8Z2OMUU=",
-    version = "v1.3.1",
+    sum = "h1:cgaJ0mgwEM0YNNATXFXSnLfji6XcMieTc2mRjH1ZYdY=",
+    version = "v1.36.0",
 )
 
 go_repository(
