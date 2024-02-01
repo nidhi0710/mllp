@@ -93,5 +93,6 @@ func (h *Handler) Handle(m pubsub.Message) {
 		return
 	}
 
+	log.Infof("ACK received for message %v", msgName)
 	m.Ack()
 }

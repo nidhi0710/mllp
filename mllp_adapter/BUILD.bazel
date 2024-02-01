@@ -40,11 +40,11 @@ container_image(
 )
 
 docker_push(
-    name = "image_push",
+    name = "mllp_test_adapter",
     image = ":mllp_adapter_docker",
     registry = "gcr.io",
     # Placeholder project and image names, please replace with yours.
-    repository = "my-project/my-image",
+    repository = "nidhi-test-1/mllp-test/mllp_test_adapter",
     tag = "latest",
 )
 
