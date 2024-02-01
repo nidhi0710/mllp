@@ -27,7 +27,7 @@ Note that the 'latest' image tag is convenient for development and testing, but
 production deployments should use a stable image tag to ensure that a new image
 isn't unintentionally deployed whenever the mllp-adapter image is updated.
 
-## Build (Optional)
+## Build (Optional) (Use Bazel-1.5.1 to avoid conflicts)
 
 We use bazel as the build tool. Please refer to
 [the bazel documentation](https://docs.bazel.build/versions/master/getting-started.html)
