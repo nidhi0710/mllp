@@ -1,0 +1,52 @@
+# Copyright 2019 Google LLC.  All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+steps:
+- id: 'Patch config'
+  name: 'ubuntu'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    find config/presubmit -type f | xargs sed -i "s/PROJECT_ID/$PROJECT_ID/g"
+    find config/presubmit -type f | xargs sed -i "s/DATASET_ID/dataset-$BUILD_ID/g"
+    find config/presubmit -type f | xargs sed -i "s/HL7_STORE_ID/store-$BUILD_ID/g"
+    find config/presubmit -type f | xargs sed -i "s/FAKE_HOSPITAL_STORE_ID/hospital-$BUILD_ID/g"
+    find config/presubmit -type f | xargs sed -i "s/PUBSUB_SUB_ID/sub-$BUILD_ID/g"
+  waitFor: ['-']
+
+- id: 'Build all'
+  name: gcr.io/cloud-builders/bazel
+  args: ['build', '--spawn_strategy=standalone', '//mllp_adapter/...']
+  waitFor: ['-']
+
+#- name: 'bash'
+#  script: |
+#    #!/usr/bin/env bash
+#    ls
+#    cat mllp_adapter/go.mod
+
+- id: 'Build docker image'
+  name: gcr.io/cloud-builders/bazel
+  args: ['run', '--spawn_strategy=standalone', '//mllp_adapter:mllp_adapter_docker']
+#  waitFor: ['Unit tests']
+
+- id: 'Tag image'
+  name: gcr.io/cloud-builders/docker
+  args: ['tag', 'bazel/mllp_adapter:mllp_adapter_docker', 'gcr.io/$PROJECT_ID/mllp_adapter:presubmit']
+  waitFor: ['Build docker image']
+
+- id: 'Push image'
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/mllp_adapter:presubmit']
+  waitFor: ['Tag image']

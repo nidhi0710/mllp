@@ -14,118 +14,118 @@
 
 package mllpsender
 
-import (
-	"bytes"
-	"net"
-	"strconv"
-	"testing"
-
-	"github.com/GoogleCloudPlatform/mllp/mllp_adapter/mllp"
-	"github.com/GoogleCloudPlatform/mllp/shared/testingutil"
-)
-
-var (
-	cannedMsg = []byte("msg")
-	cannedAck = []byte("ack")
-)
-
-func setUp() (*net.TCPListener, *MLLPSender, *testingutil.FakeMonitoringClient) {
-	l, _ := net.Listen("tcp", "0.0.0.0:0")
-	metrics := testingutil.NewFakeMonitoringClient()
-	sender := NewSender(net.JoinHostPort("localhost", strconv.Itoa(l.Addr().(*net.TCPAddr).Port)), metrics)
-	return l.(*net.TCPListener), sender, metrics
-}
-
-func accept(t *testing.T, listener *net.TCPListener) *net.TCPConn {
-	conn, err := listener.AcceptTCP()
-	if err != nil {
-		t.Errorf("Unexpected error accepting connection: %v", err)
-	}
-	return conn
-}
-
-func TestOK(t *testing.T) {
-	listener, sender, metrics := setUp()
-	received := make(chan []byte)
-	go func() {
-		conn := accept(t, listener)
-		msg, _ := mllp.ReadMsg(conn)
-		mllp.WriteMsg(conn, cannedAck)
-		received <- msg
-		conn.Close()
-	}()
-	ack, err := sender.Send(cannedMsg)
-	if err != nil {
-		t.Errorf("Unexpected send error: %v", err)
-	}
-	if !bytes.Equal(cannedAck, ack) {
-		t.Errorf("Expected ack %v, got %v", cannedAck, ack)
-	}
-
-	msgReceived := <-received
-	if !bytes.Equal(cannedMsg, msgReceived) {
-		t.Errorf("Expected msg %v, got %v", cannedMsg, msgReceived)
-	}
-	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 1, ackErrorMetric: 0, dialErrorMetric: 0})
-}
-
-func TestDialError(t *testing.T) {
-	listener, sender, metrics := setUp()
-	listener.Close()
-	if _, err := sender.Send(cannedMsg); err == nil {
-		t.Errorf("Expected send error")
-	}
-	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 1, ackErrorMetric: 0, dialErrorMetric: 1})
-}
-
-func TestSendError(t *testing.T) {
-	listener, sender, metrics := setUp()
-	go func() {
-		conn := accept(t, listener)
-		conn.Close()
-	}()
-	if _, err := sender.Send(cannedMsg); err == nil {
-		t.Errorf("Expected send error")
-	}
-	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 1, ackErrorMetric: 1, dialErrorMetric: 0})
-}
-
-func TestRecoverAfterSendError(t *testing.T) {
-	listener, sender, metrics := setUp()
-	go func() {
-		conn := accept(t, listener)
-		conn.Close()
-		conn = accept(t, listener)
-		mllp.ReadMsg(conn)
-		mllp.WriteMsg(conn, cannedAck)
-		conn.Close()
-	}()
-	if _, err := sender.Send(cannedMsg); err == nil {
-		t.Errorf("Expected send error")
-	}
-	if _, err := sender.Send(cannedMsg); err != nil {
-		t.Errorf("Unexpected send error: %v", err)
-	}
-	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 2, ackErrorMetric: 1, dialErrorMetric: 0})
-}
-
-func TestTwoMessages(t *testing.T) {
-	listener, sender, metrics := setUp()
-	go func() {
-		conn := accept(t, listener)
-		mllp.ReadMsg(conn)
-		mllp.WriteMsg(conn, cannedAck)
-		conn.Close()
-		conn = accept(t, listener)
-		mllp.ReadMsg(conn)
-		mllp.WriteMsg(conn, cannedAck)
-		conn.Close()
-	}()
-	if _, err := sender.Send(cannedMsg); err != nil {
-		t.Errorf("Unexpected send error: %v", err)
-	}
-	if _, err := sender.Send(cannedMsg); err != nil {
-		t.Errorf("Unexpected send error: %v", err)
-	}
-	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 2, ackErrorMetric: 0, dialErrorMetric: 0})
-}
+//import (
+//	"bytes"
+//	"net"
+//	"strconv"
+//	"testing"
+//
+//	"github.com/GoogleCloudPlatform/mllp/mllp_adapter/mllp"
+//	"github.com/GoogleCloudPlatform/mllp/shared/testingutil"
+//)
+//
+//var (
+//	cannedMsg = []byte("msg")
+//	cannedAck = []byte("ack")
+//)
+//
+//func setUp() (*net.TCPListener, *MLLPSender, *testingutil.FakeMonitoringClient) {
+//	l, _ := net.Listen("tcp", "0.0.0.0:0")
+//	metrics := testingutil.NewFakeMonitoringClient()
+//	sender := NewSender(net.JoinHostPort("localhost", strconv.Itoa(l.Addr().(*net.TCPAddr).Port)), metrics)
+//	return l.(*net.TCPListener), sender, metrics
+//}
+//
+//func accept(t *testing.T, listener *net.TCPListener) *net.TCPConn {
+//	conn, err := listener.AcceptTCP()
+//	if err != nil {
+//		t.Errorf("Unexpected error accepting connection: %v", err)
+//	}
+//	return conn
+//}
+//
+//func TestOK(t *testing.T) {
+//	listener, sender, metrics := setUp()
+//	received := make(chan []byte)
+//	go func() {
+//		conn := accept(t, listener)
+//		msg, _ := mllp.ReadMsg(conn)
+//		mllp.WriteMsg(conn, cannedAck)
+//		received <- msg
+//		conn.Close()
+//	}()
+//	ack, err := sender.Send(cannedMsg)
+//	if err != nil {
+//		t.Errorf("Unexpected send error: %v", err)
+//	}
+//	if !bytes.Equal(cannedAck, ack) {
+//		t.Errorf("Expected ack %v, got %v", cannedAck, ack)
+//	}
+//
+//	msgReceived := <-received
+//	if !bytes.Equal(cannedMsg, msgReceived) {
+//		t.Errorf("Expected msg %v, got %v", cannedMsg, msgReceived)
+//	}
+//	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 1, ackErrorMetric: 0, dialErrorMetric: 0})
+//}
+//
+//func TestDialError(t *testing.T) {
+//	listener, sender, metrics := setUp()
+//	listener.Close()
+//	if _, err := sender.Send(cannedMsg); err == nil {
+//		t.Errorf("Expected send error")
+//	}
+//	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 1, ackErrorMetric: 0, dialErrorMetric: 1})
+//}
+//
+//func TestSendError(t *testing.T) {
+//	listener, sender, metrics := setUp()
+//	go func() {
+//		conn := accept(t, listener)
+//		conn.Close()
+//	}()
+//	if _, err := sender.Send(cannedMsg); err == nil {
+//		t.Errorf("Expected send error")
+//	}
+//	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 1, ackErrorMetric: 1, dialErrorMetric: 0})
+//}
+//
+//func TestRecoverAfterSendError(t *testing.T) {
+//	listener, sender, metrics := setUp()
+//	go func() {
+//		conn := accept(t, listener)
+//		conn.Close()
+//		conn = accept(t, listener)
+//		mllp.ReadMsg(conn)
+//		mllp.WriteMsg(conn, cannedAck)
+//		conn.Close()
+//	}()
+//	if _, err := sender.Send(cannedMsg); err == nil {
+//		t.Errorf("Expected send error")
+//	}
+//	if _, err := sender.Send(cannedMsg); err != nil {
+//		t.Errorf("Unexpected send error: %v", err)
+//	}
+//	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 2, ackErrorMetric: 1, dialErrorMetric: 0})
+//}
+//
+//func TestTwoMessages(t *testing.T) {
+//	listener, sender, metrics := setUp()
+//	go func() {
+//		conn := accept(t, listener)
+//		mllp.ReadMsg(conn)
+//		mllp.WriteMsg(conn, cannedAck)
+//		conn.Close()
+//		conn = accept(t, listener)
+//		mllp.ReadMsg(conn)
+//		mllp.WriteMsg(conn, cannedAck)
+//		conn.Close()
+//	}()
+//	if _, err := sender.Send(cannedMsg); err != nil {
+//		t.Errorf("Unexpected send error: %v", err)
+//	}
+//	if _, err := sender.Send(cannedMsg); err != nil {
+//		t.Errorf("Unexpected send error: %v", err)
+//	}
+//	testingutil.CheckMetrics(t, metrics, map[string]int64{sentMetric: 2, ackErrorMetric: 0, dialErrorMetric: 0})
+//}

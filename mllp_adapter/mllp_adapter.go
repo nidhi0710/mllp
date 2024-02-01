@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"net"
 
 	"flag"
 	
@@ -88,7 +89,17 @@ func run() error {
 	if *pubsubProjectID == "" || *pubsubSubscription == "" {
 		log.Infof("Either --pubsub_project_id or --pubsub_subscription is not provided, notifications of the new messages are not read and no outgoing messages will be sent to the target MLLP address.")
 	} else {
-		sender := mllpsender.NewSender(*mllpAddr, mon)
+		log.Infof("Creating main connection")
+		conn, err := net.Dial("tcp", *mllpAddr)
+		if err != nil {
+			return fmt.Errorf("dialing: %v", err)
+		}
+		defer func() {
+			if err := conn.Close(); err != nil {
+				log.Errorf("MLLP Sender: failed to clean up connection: %v", err)
+			}
+		}()
+		sender := mllpsender.NewSender(*mllpAddr, mon, conn)
 		handler := handler.New(mon, apiClient, sender, *checkPublishAttribute)
 		go func() {
 			err := pubsub.Listen(ctx, *credentials, handler, *pubsubProjectID, *pubsubSubscription)

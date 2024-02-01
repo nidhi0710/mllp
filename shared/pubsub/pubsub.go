@@ -19,10 +19,11 @@ package pubsub
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"cloud.google.com/go/pubsub"
-	"google.golang.org/api/option"
 	"github.com/GoogleCloudPlatform/mllp/shared/util"
+	"google.golang.org/api/option"
 )
 
 const (
@@ -81,8 +82,12 @@ func listen(ctx context.Context, h MessageHandler, projectID string, topic strin
 	if err != nil {
 		return fmt.Errorf("creating pubsub client: %v", err)
 	}
-
-	return client.Subscription(topic).Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
+	sub := client.Subscription(topic)
+	sub.ReceiveSettings.NumGoroutines = 1
+	sub.ReceiveSettings.MaxOutstandingMessages = 1
+	sub.ReceiveSettings.MaxExtension = 5 * time.Minute
+	sub.ReceiveSettings.MaxExtensionPeriod = 5 * time.Minute
+	return sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		h.Handle(&messageWrapper{msg: msg})
 	})
 }

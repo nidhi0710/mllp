@@ -35,39 +35,43 @@ const (
 type MLLPSender struct {
 	addr    string
 	metrics monitoring.Client
+	conn    net.Conn
 }
 
 // NewSender creates a new MLLPSender.
-func NewSender(addr string, metrics monitoring.Client) *MLLPSender {
+func NewSender(addr string, metrics monitoring.Client,conn net.Conn) *MLLPSender {
 	metrics.NewCounter(sentMetric, "Number of HL7 messages sent to mllp_addr")
 	metrics.NewCounter(ackErrorMetric, "Number of errors when receiving ACK from mllp_addr")
 	metrics.NewCounter(sendErrorMetric, "Number of errors when sending HL7 message to mllp_addr")
 	metrics.NewCounter(dialErrorMetric, "Number of errors when dialing to mllp_addr")
-	return &MLLPSender{addr: addr, metrics: metrics}
+	return &MLLPSender{addr: addr, metrics: metrics, conn: conn}
 }
 
 // Send sends an HL7 messages via MLLP.
 func (m *MLLPSender) Send(msg []byte) ([]byte, error) {
 	m.metrics.IncCounter(sentMetric)
 
-	conn, err := net.Dial("tcp", m.addr)
-	if err != nil {
-		m.metrics.IncCounter(dialErrorMetric)
-		return nil, fmt.Errorf("dialing: %v", err)
-	}
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log.Errorf("MLLP Sender: failed to clean up connection: %v", err)
+	if m.conn == nil {
+		log.Infof("Creating a new connection")
+		conn, err := net.Dial("tcp", m.addr)
+		if err != nil {
+			m.metrics.IncCounter(dialErrorMetric)
+			return nil, fmt.Errorf("dialing: %v", err)
 		}
-	}()
+		m.conn = conn
+	}
 
-	if err := mllp.WriteMsg(conn, msg); err != nil {
+	if err := mllp.WriteMsg(m.conn, msg); err != nil {
 		m.metrics.IncCounter(sendErrorMetric)
+		m.conn.Close()
+		m.conn = nil
 		return nil, fmt.Errorf("writing message: %v", err)
 	}
-	ack, err := mllp.ReadMsg(conn)
+	ack, err := mllp.ReadMsg(m.conn)
 	if err != nil {
 		m.metrics.IncCounter(ackErrorMetric)
+		m.conn.Close()
+		m.conn = nil
 		return nil, fmt.Errorf("reading ACK: %v", err)
 	}
 	return ack, nil

@@ -46,7 +46,7 @@ load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
 
-load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 
 go_rules_dependencies()
 
@@ -72,30 +72,29 @@ go_repository(
 
 go_repository(
     name = "io_opencensus_go_contrib_exporter_stackdriver",
+    importpath = "contrib.go.opencensus.io/exporter/stackdriver",
     sum = "h1:lIFYmQsqejvlq+GobFUbC5F0prD5gvhP6r0gWLZRDq4=",
     version = "v0.13.8",
-    importpath = "contrib.go.opencensus.io/exporter/stackdriver",
 )
 
 go_repository(
-   name = "org_golang_google_api",
+    name = "org_golang_google_api",
+    build_file_proto_mode = "disable_global",
     importpath = "google.golang.org/api",
     sum = "h1:MDkAbYIB1JpSgCTOCYYoIec/coMlKK4oVbpnBLLcyT0=",
     version = "v0.58.0",
-    build_file_proto_mode = "disable_global",
 )
 
 go_repository(
     name = "com_github_googleapis_gax_go",
-    commit = "be11bb253a768098254dc71e95d1a81ced778de3",
+    commit = "2ed31ec13111a3892f6e37b6660cacdf0e2d57fb",
     importpath = "github.com/googleapis/gax-go",
 )
 
 go_repository(
     name = "com_google_cloud_go",
+    commit = "35d4347d92742e905b4c6008cb6372707bac694d",
     importpath = "cloud.google.com/go",
-    sum = "h1:y/cM2iqGgGi5D5DQZl6D9STN/3dR/Vx5Mp8s752oJTY=",
-    version = "v0.99.0",
 )
 
 go_repository(
@@ -121,10 +120,10 @@ go_repository(
 
 go_repository(
     name = "com_github_census_instrumentation_opencensus_proto",
+    build_extra_args = ["-exclude=src"],  # See https://github.com/census-instrumentation/opencensus-proto/issues/200
     importpath = "github.com/census-instrumentation/opencensus-proto",
     sum = "h1:glEXhBS5PSLLv4IXzLA5yPRVX4bilULVyxxbrfOtDAk=",
     version = "v0.2.1",
-    build_extra_args = ["-exclude=src"],  # See https://github.com/census-instrumentation/opencensus-proto/issues/200
 )
 
 go_repository(
@@ -142,7 +141,7 @@ go_repository(
 )
 
 go_repository(
-   name = "com_github_jmespath_go_jmespath",
+    name = "com_github_jmespath_go_jmespath",
     importpath = "github.com/jmespath/go-jmespath",
     sum = "h1:SMvOWPJCES2GdFracYbBQh93GXac8fq7HeN6JnpduB8=",
     version = "v0.0.0-20160803190731-bd40a432e4c7",
@@ -204,6 +203,7 @@ go_repository(
     commit = "0e4e31197428a347842d152773b4cace4645ca25",
     importpath = "github.com/google/uuid",
 )
+
 http_archive(
     name = "io_bazel_rules_docker",
     sha256 = "27d53c1d646fc9537a70427ad7b034734d08a9c38924cc6357cc973fed300820",
@@ -227,7 +227,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_pull")
 
 container_pull(
     name = "ubuntu",
+    digest = "sha256:8f0b64fd212007183434b8b3271b723700ab14e4230b5bec1415b79aaa3ac97b",
     registry = "gcr.io",
     repository = "cloud-marketplace-containers/google/ubuntu1604",
-    digest = "sha256:8f0b64fd212007183434b8b3271b723700ab14e4230b5bec1415b79aaa3ac97b",
 )
