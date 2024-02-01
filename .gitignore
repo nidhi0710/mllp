@@ -1,0 +1,4 @@
+bazel-bin/*
+bazel-mllp/*
+bazel-out/*
+bazel-testlogs/*
