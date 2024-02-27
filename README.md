@@ -1,4 +1,4 @@
-# MLLP Adapter
+# MLLP Adapter - Uses Single TCP Conenction
 
 The MLLP(Short for "Minimal Lower Layer Protocol") adapter is a component that
 runs on [GKE](https://cloud.google.com/kubernetes-engine/), receives HL7v2
